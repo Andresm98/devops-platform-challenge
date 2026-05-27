@@ -1,5 +1,6 @@
 package com.anax.devops.app.controller;
 
+import com.anax.devops.app.infrastructure.config.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,9 +35,15 @@ class DevOpsControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Map<String, Object> validPayload;
-    private String dummyJwt;
+    // Inyectar el servicio real para generar tokens criptográficos válidos
+    @Autowired
+    private JwtService jwtService;
 
+    private Map<String, Object> validPayload;
+    private String realValidJwt;
+    private final String invalidJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0In0.wrongsignature";
+
+    // UNIT TESTING
     @BeforeEach
     void setUp() {
         // Payload estricto solicitado por el reto
@@ -47,8 +54,10 @@ class DevOpsControllerTest {
                 "timeToLifeSec", 45
         );
 
-        // Un token JWT simulado estructuralmente para las pruebas iniciales
-        dummyJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEifQ.dummy-signature";
+        // Generar un token real y firmado criptográficamente para las pruebas
+        realValidJwt = jwtService.generateUniqueToken("NTT-Data-Test-Client");
+
+        System.out.println("\nTOKEN REAL GENERADO PARA PRUEBAS LOCALES:\n" + realValidJwt + "\n");
     }
 
     @Test
@@ -56,7 +65,7 @@ class DevOpsControllerTest {
     void post_withValidRequest_returns200AndGreeting() throws Exception {
         mockMvc.perform(post(ENDPOINT)
                         .header(API_KEY_HEADER, VALID_API_KEY)
-                        .header(JWT_HEADER, dummyJwt)
+                        .header(JWT_HEADER, realValidJwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validPayload)))
                 .andExpect(status().isOk())
@@ -67,7 +76,18 @@ class DevOpsControllerTest {
     @DisplayName("POST /DevOps sin API Key retorna 401 Unauthorized")
     void post_withoutApiKey_returns401() throws Exception {
         mockMvc.perform(post(ENDPOINT)
-                        .header(JWT_HEADER, dummyJwt)
+                        .header(JWT_HEADER, realValidJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validPayload)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("POST /DevOps con JWT inválido o mal firmado retorna 401 Unauthorized")
+    void post_withInvalidJwt_returns401() throws Exception {
+        mockMvc.perform(post(ENDPOINT)
+                        .header(API_KEY_HEADER, VALID_API_KEY)
+                        .header(JWT_HEADER, invalidJwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validPayload)))
                 .andExpect(status().isUnauthorized());
@@ -78,8 +98,61 @@ class DevOpsControllerTest {
     void get_unsupportedMethod_returns200WithErrorBody() throws Exception {
         mockMvc.perform(get(ENDPOINT)
                         .header(API_KEY_HEADER, VALID_API_KEY)
-                        .header(JWT_HEADER, dummyJwt))
+                        .header(JWT_HEADER, realValidJwt))
                 .andExpect(status().isOk())
                 .andExpect(content().string("ERROR"));
+    }
+
+    @Test
+    @DisplayName("Request fuera de /DevOps pasa sin validación")
+    void requestOutsideDevOps_passesWithoutValidation() throws Exception {
+
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /DevOps sin JWT retorna 401")
+    void post_withoutJwt_returns401() throws Exception {
+
+        mockMvc.perform(post(ENDPOINT)
+                        .header(API_KEY_HEADER, VALID_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validPayload)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // INTEGRATION TESTING
+    @Test
+    @DisplayName("POST /DevOps/auth/token retorna JWT válido")
+    void post_generateToken_returnsJwt() throws Exception {
+
+        String requestBody = """
+            {
+                "clientName": "NTT-Data-Test-Client"
+            }
+            """;
+
+        mockMvc.perform(post("/DevOps/auth/token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.token").isString());
+    }
+
+    @Test
+    @DisplayName("POST /DevOps/auth/token sin clientName retorna 400")
+    void post_generateToken_withoutClientName_returns400() throws Exception {
+
+        String requestBody = """
+            {
+            }
+            """;
+
+        mockMvc.perform(post("/DevOps/auth/token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
     }
 }

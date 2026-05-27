@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+
+security:
+  api-key-header: "X-Parse-REST-API-Key"
+  jwt-header: "X-JWT-KWY"
+  api-key: "${API_KEY:2f5ae96c-b558-4c7b-a590-a501ae1c3f6c}"
+  jwt-secret: "${JWT_SECRET:ntt-data-devops-platform-challenge-super-secret-key-2026}"
+  jwt-expiration-ms: 600000 # 10 minutos
