@@ -1,0 +1,63 @@
+name: "Continuous Integration & Code Quality"
+
+on:
+  push:
+    branches: [ "dev", "feature/*" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  code-quality-and-test:
+    name: "Maven Build, Test & Sonar Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Esencial para SonarCloud
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Execute Checkstyle & Code Tests (TDD)
+        run: |
+          cd app
+          mvn clean verify
+
+      - name: Publish JaCoCo Coverage Report to PR Summary
+        uses: madrapps/jacoco-report@v1.7.1
+        if: always()
+        with:
+          paths: ${{ github.workspace }}/app/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-default: 80
+          update-comment: true
+
+      - name: Run SonarCloud Static Code Analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          cd app
+          mvn sonar:sonar \
+            -Dsonar.projectKey=devops-platform-challenge \
+            -Dsonar.organization=devops_platform \
+            -Dsonar.host.url=https://sonarcloud.io
+
+  iac-security-scan:
+    name: "Infrastructure Security Scan (Checkov)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov Static Security Analysis
+        uses: bridgecrewio/checkov-action@master
+        with:
+          framework: terraform
+          output_format: cli
+          soft_fail: true # Permite auditar sin bloquear drásticamente las primeras iteraciones cloud
