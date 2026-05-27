@@ -1,0 +1,174 @@
+{
+  "info": {
+    "_postman_id": "131dbc7c-6d2c-48cc-83c4-13ff3ba3d1d8",
+    "name": "devops-platform-challenge",
+    "description": "DevOps Collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12863098"
+  },
+  "item": [
+    {
+      "name": "Generate Token",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"clientName\": \"NTT-Data-Test-Client\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{url_host}}:80/DevOps/auth/token",
+          "host": [
+            "{{url_host}}"
+          ],
+          "port": "80",
+          "path": [
+            "DevOps",
+            "auth",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Send Message",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Parse-REST-API-Key",
+            "value": "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c",
+            "type": "text"
+          },
+          {
+            "key": "X-JWT-KWY",
+            "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6ImU0Y2MwOWM4LWI4OGMtNDU0Ni04NTJjLTM2MWJlY2M1NWI4MiIsImlhdCI6MTc3OTkwODkxMiwiZXhwIjoxNzc5OTA5NTEyfQ.9huS2aNCiYpr1TEIr4imeKK6EEPsyaVitgxO7akqF2DYWPp9Gqe2tSACFLXZ9l29",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"message\": \"This is a test\",\r\n  \"to\": \"Juan Perez\",\r\n  \"from\": \"Rita Asturia\",\r\n  \"timeToLifeSec\": 45\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{url_host}}:80/DevOps",
+          "host": [
+            "{{url_host}}"
+          ],
+          "port": "80",
+          "path": [
+            "DevOps"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Testing",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Parse-REST-API-Key",
+            "value": "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c",
+            "type": "text"
+          },
+          {
+            "key": "X-JWT-KWY",
+            "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6ImU0Y2MwOWM4LWI4OGMtNDU0Ni04NTJjLTM2MWJlY2M1NWI4MiIsImlhdCI6MTc3OTkwODkxMiwiZXhwIjoxNzc5OTA5NTEyfQ.9huS2aNCiYpr1TEIr4imeKK6EEPsyaVitgxO7akqF2DYWPp9Gqe2tSACFLXZ9l29",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"message\": \"This is a test\",\r\n  \"to\": \"Juan Perez\",\r\n  \"from\": \"Rita Asturia\",\r\n  \"timeToLifeSec\": 45\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{url_host}}:80/DevOps",
+          "host": [
+            "{{url_host}}"
+          ],
+          "port": "80",
+          "path": [
+            "DevOps"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "url_host",
+      "value": ""
+    }
+  ]
+}
