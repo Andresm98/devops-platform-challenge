@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-config
+  namespace: devops-app
+data:
+  SERVER_PORT: "8080"
+  LOGGING_LEVEL_COM_ANAX_DEVOPS: "DEBUG"
