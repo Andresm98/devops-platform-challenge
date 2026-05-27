@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-ingress
+  namespace: devops-app
+  annotations:
+    kubernetes.io/ingress.class: "kong" # Indica a Kong Ingress Controller que tome el control
+    konghq.com/strip-path: "false"      # Preserva la ruta /DevOps para el microservicio
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /DevOps
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: devops-service
+                port:
+                  number: 8080
