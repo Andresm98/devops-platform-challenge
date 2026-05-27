@@ -1,0 +1,28 @@
+# Target de Maven (Compilación)
+**/target/
+*.jar
+*.war
+*.ear
+
+# Herramientas del IDE y Sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+.crash/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+
+# Archivos de entorno locales
+.env
+.env.local
