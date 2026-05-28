@@ -41,9 +41,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # Entrar a la carpeta del proyecto para ejecutar el análisis de SonarCloud con Maven
+        # Garantizar que el wrapper de Maven tenga permisos de ejecución
         run: |
           cd app
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          chmod +x mvnw
+          ./mvnw sonar:sonar \
+            -Dsonar.projectKey=devops-platform-challenge \
+            -Dsonar.organization=devops-platform-challenge \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}      
 
   iac-security-scan:
     name: "Infrastructure Security Scan (Checkov)"
