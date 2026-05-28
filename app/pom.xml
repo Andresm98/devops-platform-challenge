@@ -27,6 +27,7 @@
         <sonar.organization>devops-platform-challenge</sonar.organization>
         <sonar.projectKey>devops-platform-challenge</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <tomcat.version>10.1.55</tomcat.version>
     </properties>
 
     <dependencies>
