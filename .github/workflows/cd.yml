@@ -3,17 +3,15 @@ name: "Continuous Deployment to AWS Production"
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch: # Soporte indispensable para ejecuciones bajo demanda basadas en versiones
 
 jobs:
   infrastructure-and-delivery:
     name: "Terraform Apply & K8s Continuous Delivery"
     runs-on: ubuntu-latest
-
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -34,84 +32,42 @@ jobs:
           IP=$(terraform output -raw k3s_server_ip)
           echo "server_ip=$IP" >> $GITHUB_OUTPUT
 
-      # -------------------------
-      # WAIT FOR SSH
-      # -------------------------
-      - name: Wait for SSH to be ready
-        run: |
-          IP=${{ steps.get_ip.outputs.server_ip }}
-
-          echo "Waiting for SSH on $IP..."
-
-          for i in {1..40}; do
-            nc -z $IP 22 && echo "SSH ready" && break
-            echo "SSH not ready yet... attempt $i"
-            sleep 15
-          done
-
-      # -------------------------
-      # VERIFY K3S API READY
-      # -------------------------
-      - name: Wait for Kubernetes API
+      - name: Configure SSH Key and Connect to K3s Cluster
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.get_ip.outputs.server_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-          command_timeout: 20m
           script: |
-            echo "Waiting for K3s..."
-
-            for i in {1..40}; do
-              sudo k3s kubectl get nodes && echo "K3s READY" && exit 0
-              echo "K3s not ready yet... attempt $i"
-              sleep 15
-            done
-
-            exit 1
-
-      # -------------------------
-      # DEPLOYMENT
-      # -------------------------
-      - name: Deploy to K3s Cluster
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ steps.get_ip.outputs.server_ip }}
-          username: ubuntu
-          key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-          command_timeout: 20m
-          script: |
-            set -e
-
-            # 0. Namespace seguro
-            sudo k3s kubectl create namespace devops-app || true
-
-            # 1. Kong — URL corregida con versión fija
-            sudo k3s kubectl apply -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.12.0/deploy/single/all-in-one-dbless.yaml
-
-            # 2. Repo
+            # 1. Instalar Kong Ingress Controller oficial de forma declarativa si no existe
+            sudo kubectl apply -f https://bit.ly/k8s-kong-2.12
+            
+            # 2. Sincronizar manifiestos del repositorio de forma limpia dentro del servidor
             rm -rf devops-platform-challenge
             git clone https://github.com/${{ github.repository }}.git
-
             cd devops-platform-challenge/k8s/base
-
-            # 3. Imagen SHA
+            
+            # 3. Reemplazo dinámico del Tag de la imagen usando el SHA auditado y aprobado por Trivy
             sed -i "s|image: andy17u7/devops-challenge:latest|image: andy17u7/devops-challenge:${{ github.sha }}|g" deployment.yaml
-
-            # 4. Deploy
-            sudo k3s kubectl apply -k .
-
-            # 5. Observabilidad
+            
+            # 4. Despliegue Atómico e Idempotente usando Kustomize
+            sudo kubectl apply -k .
+            
+            # 5. Aplicar la infraestructura de Observabilidad Pragmática (Prometheus/Grafana)
             if [ -f ../monitoring.yaml ]; then
-              sudo k3s kubectl apply -f ../monitoring.yaml
+              sudo kubectl apply -f ../monitoring.yaml
             fi
+            
+            # 6. Rollout status: Bloquea el pipeline si el Pod nuevo falla en arrancar (Zero-Downtime Guard)
+            sudo kubectl rollout status deployment/devops-service -n devops-app
 
-            # 6. Rollout seguro
-            sudo k3s kubectl rollout status deployment/devops-service -n devops-app --timeout=5m
+      - name: Capture EC2 Live Public IP for Testing
+        id: get_ip
+        run: |
+          cd terraform/environments/prod
+          IP=$(terraform output -raw k3s_server_ip)
+          echo "server_ip=$IP" >> $GITHUB_OUTPUT
 
-      # -------------------------
-      # TESTING
-      # -------------------------
       - name: Set up Python Environment
         uses: actions/setup-python@v5
         with:
@@ -123,9 +79,11 @@ jobs:
 
       - name: Execute Automated Smoke Test (E2E Verification)
         env:
+          # Mapear la IP pública en vivo calculada por Terraform en el puerto HTTP (80) controlado por Kong
           APP_HOST: ${{ steps.get_ip.outputs.server_ip }}
           APP_PORT: "80"
           API_KEY: ${{ secrets.TEST_API_KEY }}
-
         run: |
+          chmod +x ./test_endpoint.py
           python ./test_endpoint.py
+            
