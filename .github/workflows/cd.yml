@@ -34,7 +34,9 @@ jobs:
           IP=$(terraform output -raw k3s_server_ip)
           echo "server_ip=$IP" >> $GITHUB_OUTPUT
 
-      # WAIT 1: EC2 + SSH READY
+      # -------------------------
+      # WAIT FOR SSH
+      # -------------------------
       - name: Wait for SSH to be ready
         run: |
           IP=${{ steps.get_ip.outputs.server_ip }}
@@ -47,28 +49,31 @@ jobs:
             sleep 15
           done
 
-      # WAIT 2: K3s API READY (CRÍTICO)
+      # -------------------------
+      # VERIFY K3S API READY
+      # -------------------------
       - name: Wait for Kubernetes API
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.get_ip.outputs.server_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-          command_timeout: 15m
+          command_timeout: 20m
           script: |
-            echo "Waiting for K3s to be ready..."
+            echo "Waiting for K3s..."
 
             for i in {1..40}; do
-              sudo kubectl get nodes && echo "K3s READY" && exit 0
+              sudo k3s kubectl get nodes && echo "K3s READY" && exit 0
               echo "K3s not ready yet... attempt $i"
               sleep 15
             done
 
-            echo "K3s failed to become ready"
             exit 1
 
-      # DEPLOY REAL
-      - name: Configure SSH Key and Deploy to K3s Cluster
+      # -------------------------
+      # DEPLOYMENT
+      # -------------------------
+      - name: Deploy to K3s Cluster
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.get_ip.outputs.server_ip }}
@@ -77,30 +82,37 @@ jobs:
           command_timeout: 20m
 
           script: |
-            # 1. Instalar Kong Ingress Controller
-            sudo kubectl apply -f https://bit.ly/k8s-kong-2.12
+            set -e
 
-            # 2. Clonar repo limpio
+            # 0. Namespace seguro
+            sudo k3s kubectl create namespace devops-app || true
+
+            # 1. Kong (más estable fijando versión)
+            sudo k3s kubectl apply -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/main/deploy/single/all-in-one-docker.yaml
+
+            # 2. Repo
             rm -rf devops-platform-challenge
             git clone https://github.com/${{ github.repository }}.git
 
             cd devops-platform-challenge/k8s/base
 
-            # 3. Imagen inmutable por SHA
+            # 3. Imagen SHA
             sed -i "s|image: andy17u7/devops-challenge:latest|image: andy17u7/devops-challenge:${{ github.sha }}|g" deployment.yaml
 
-            # 4. Deploy Kubernetes
-            sudo kubectl apply -k .
+            # 4. Deploy
+            sudo k3s kubectl apply -k .
 
             # 5. Observabilidad
             if [ -f ../monitoring.yaml ]; then
-              sudo kubectl apply -f ../monitoring.yaml
+              sudo k3s kubectl apply -f ../monitoring.yaml
             fi
 
-            # 6. Rollout health check
-            sudo kubectl rollout status deployment/devops-service -n devops-app --timeout=5m
+            # 6. Rollout seguro
+            sudo k3s kubectl rollout status deployment/devops-service -n devops-app --timeout=5m
 
+      # -------------------------
       # TESTING
+      # -------------------------
       - name: Set up Python Environment
         uses: actions/setup-python@v5
         with:
