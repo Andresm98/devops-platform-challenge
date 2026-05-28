@@ -80,15 +80,14 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
           command_timeout: 20m
-
           script: |
             set -e
 
             # 0. Namespace seguro
             sudo k3s kubectl create namespace devops-app || true
 
-            # 1. Kong (más estable fijando versión)
-            sudo k3s kubectl apply -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/main/deploy/single/all-in-one-docker.yaml
+            # 1. Kong — URL corregida con versión fija
+            sudo k3s kubectl apply -f https://raw.githubusercontent.com/Kong/kubernetes-ingress-controller/v2.12.0/deploy/single/all-in-one-dbless.yaml
 
             # 2. Repo
             rm -rf devops-platform-challenge
