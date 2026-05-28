@@ -34,37 +34,73 @@ jobs:
           IP=$(terraform output -raw k3s_server_ip)
           echo "server_ip=$IP" >> $GITHUB_OUTPUT
 
-      - name: Configure SSH Key and Connect to K3s Cluster
+      # WAIT 1: EC2 + SSH READY
+      - name: Wait for SSH to be ready
+        run: |
+          IP=${{ steps.get_ip.outputs.server_ip }}
+
+          echo "Waiting for SSH on $IP..."
+
+          for i in {1..40}; do
+            nc -z $IP 22 && echo "SSH ready" && break
+            echo "SSH not ready yet... attempt $i"
+            sleep 15
+          done
+
+      # WAIT 2: K3s API READY (CRÍTICO)
+      - name: Wait for Kubernetes API
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.get_ip.outputs.server_ip }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          command_timeout: 15m
+          script: |
+            echo "Waiting for K3s to be ready..."
+
+            for i in {1..40}; do
+              sudo kubectl get nodes && echo "K3s READY" && exit 0
+              echo "K3s not ready yet... attempt $i"
+              sleep 15
+            done
+
+            echo "K3s failed to become ready"
+            exit 1
+
+      # DEPLOY REAL
+      - name: Configure SSH Key and Deploy to K3s Cluster
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.get_ip.outputs.server_ip }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          command_timeout: 20m
 
           script: |
             # 1. Instalar Kong Ingress Controller
             sudo kubectl apply -f https://bit.ly/k8s-kong-2.12
 
-            # 2. Clonar repositorio
+            # 2. Clonar repo limpio
             rm -rf devops-platform-challenge
             git clone https://github.com/${{ github.repository }}.git
 
             cd devops-platform-challenge/k8s/base
 
-            # 3. Reemplazar tag dinámicamente
+            # 3. Imagen inmutable por SHA
             sed -i "s|image: andy17u7/devops-challenge:latest|image: andy17u7/devops-challenge:${{ github.sha }}|g" deployment.yaml
 
-            # 4. Deploy con Kustomize
+            # 4. Deploy Kubernetes
             sudo kubectl apply -k .
 
-            # 5. Monitoring stack
+            # 5. Observabilidad
             if [ -f ../monitoring.yaml ]; then
               sudo kubectl apply -f ../monitoring.yaml
             fi
 
-            # 6. Verificar rollout
-            sudo kubectl rollout status deployment/devops-service -n devops-app
+            # 6. Rollout health check
+            sudo kubectl rollout status deployment/devops-service -n devops-app --timeout=5m
 
+      # TESTING
       - name: Set up Python Environment
         uses: actions/setup-python@v5
         with:
@@ -81,5 +117,4 @@ jobs:
           API_KEY: ${{ secrets.TEST_API_KEY }}
 
         run: |
-          chmod +x ./test_endpoint.py
           python ./test_endpoint.py
