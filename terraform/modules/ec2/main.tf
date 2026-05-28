@@ -5,7 +5,7 @@ resource "aws_instance" "devops_server" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [var.security_group_id]
 
-  # Cargamos el script de inicialización desde el template decoupling
+  # script de inicialización desde el template decoupling
   user_data = templatefile("${path.module}/templates/k3s-server.sh.tpl", {
     eviction_threshold = "500Mi"
   })
