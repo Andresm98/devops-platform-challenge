@@ -2,7 +2,7 @@ name: "Continuous Integration & Code Quality"
 
 on:
   push:
-    branches: [ "dev", "feature/*" ]
+    branches: [ "main", "dev", "feature/*" ]
   pull_request:
     branches: [ "main", "dev" ]
 
@@ -43,10 +43,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           cd app
-          mvn sonar:sonar \
-            -Dsonar.projectKey=devops-platform-challenge \
-            -Dsonar.organization=devops-platform-challenge \
-            -Dsonar.host.url=https://sonarcloud.io
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
 
   iac-security-scan:
     name: "Infrastructure Security Scan (Checkov)"

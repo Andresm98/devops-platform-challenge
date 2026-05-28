@@ -24,6 +24,9 @@
             target/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.organization>devops-platform-challenge</sonar.organization>
+        <sonar.projectKey>devops-platform-challenge</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
