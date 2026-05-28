@@ -12,10 +12,14 @@ spec:
     metadata:
       labels:
         app: devops-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: microservice
-          image: santiagoanax/devops-challenge:latest # Se actualizará dinámicamente en el pipeline
+          image: andy17u7/devops-challenge:latest # Se actualizará dinámicamente en el pipeline
           ports:
             - containerPort: 8080
           resources:

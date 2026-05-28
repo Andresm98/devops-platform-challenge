@@ -136,3 +136,6 @@ Pipeline automatizado con GitHub Actions:
 ## Notas finales
 
 Este ADR establece la base arquitectónica del sistema. Cualquier evolución futura (multi-microservicio, event-driven architecture, service mesh como Istio) deberá ser documentada en ADRs adicionales.
+
+---
+**Software Engineer:** Santiago Moreta
