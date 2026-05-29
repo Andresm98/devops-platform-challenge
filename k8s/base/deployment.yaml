@@ -32,8 +32,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: devops-config
-            - secretRef:
-                name: devops-secrets
           livenessProbe:
             httpGet:
               path: /actuator/health
