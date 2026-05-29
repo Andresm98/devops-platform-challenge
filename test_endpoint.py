@@ -3,7 +3,18 @@ import requests
 import sys
 import json
 import os
+import logging
+import http.client as http_client
 from dotenv import load_dotenv
+
+# ===== VERBOSE HTTP (equivalente a curl -v) =====
+http_client.HTTPConnection.debuglevel = 1
+
+logging.basicConfig(level=logging.DEBUG)
+
+logging.getLogger("urllib3").setLevel(logging.DEBUG)
+logging.getLogger("urllib3").propagate = True
+# ================================================
 
 # 1. Intentamos cargar el .env
 load_dotenv()
@@ -59,6 +70,20 @@ def run_automation():
         print("\n RESULTADO DE LA CONEXIÓN:")
         print(json.dumps(r_final.json() if r_final.ok else r_final.text, indent=2))
 
+        print("\n=== REQUEST HEADERS ===")
+        print(json.dumps(headers, indent=2))
+
+        print("\n=== REQUEST BODY ===")
+        print(json.dumps(payload, indent=2))
+
+        print("\n=== RESPONSE STATUS ===")
+        print(r_final.status_code)
+
+        print("\n=== RESPONSE HEADERS ===")
+        print(dict(r_final.headers))
+
+        print("\n=== RESPONSE BODY ===")
+        print(r_final.text)
     except Exception as e:
         print(f"\n ERROR DE CONEXIÓN: {e}")
         sys.exit(1)
