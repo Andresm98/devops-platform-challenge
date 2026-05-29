@@ -15,8 +15,6 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("urllib3").setLevel(logging.DEBUG)
 logging.getLogger("urllib3").propagate = True
 # ================================================
-
-# 1. Intentamos cargar el .env
 load_dotenv()
 
 # 2. Extraer variables SIN valores por defecto/harcodeados
@@ -31,7 +29,7 @@ def run_automation():
     missing_vars = [v for v in ["APP_HOST", "APP_PORT", "API_KEY"] if not os.getenv(v)]
     if missing_vars:
         print(f" ERROR: Faltan variables en el .env: {', '.join(missing_vars)}")
-        print("Asegúrate de que tu archivo .env existe y está configurado.")
+        print("Asegúrate de que tu archivo .env existe y está configurado. El proceso CD lo hará por ti, pero si estás ejecutando localmente, debes crearlo manualmente.")
         sys.exit(1)
 
     base_url = f"http://{APP_HOST}:{APP_PORT}/DevOps"

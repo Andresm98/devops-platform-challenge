@@ -1,79 +1,135 @@
 {
-  "annotations": { "list": [] },
   "editable": true,
-  "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
-  "links": [],
-  "liveNow": false,
   "panels": [
     {
+      "title": "CLUSTER RESOURCES",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "title": "CPU Usage (Node/Host)",
       "type": "gauge",
-      "title": "Disponibilidad del Servicio (%)",
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
-      "id": 1,
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 1 },
+      "id": 101,
+      "targets": [{ "expr": "sum(rate(container_cpu_usage_seconds_total{container=\"\"}[5m])) / count(node_cpu_seconds_total{mode=\"system\"}) * 100", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } } }
+    },
+    {
+      "title": "Memory Usage (Docker Host)",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 1 },
+      "id": 102,
+      "targets": [{ "expr": "node_memory_Active_bytes / node_memory_MemTotal_bytes * 100", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 80 }, { "color": "red", "value": 95 }] } } }
+    },
+    {
+      "title": "Network I/O (Traffic In/Out)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
+      "id": 103,
       "targets": [
-        { "expr": "up{job='kubernetes-pods'} * 100", "instant": true, "refId": "A" }
+        { "expr": "sum(rate(container_network_receive_bytes_total[5m]))", "legendFormat": "Inbound", "refId": "A" },
+        { "expr": "sum(rate(container_network_transmit_bytes_total[5m]))", "legendFormat": "Outbound", "refId": "B" }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "min": 0, "max": 100, "unit": "percent",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 100 }
-            ]
-          }
-        }
-      }
+      "fieldConfig": { "defaults": { "unit": "binBps" } }
     },
     {
-      "type": "timeseries",
-      "title": "Tasa de Peticiones (Throughput)",
-      "gridPos": { "h": 6, "w": 9, "x": 6, "y": 0 },
-      "id": 2,
-      "targets": [
-        { "expr": "rate(http_server_requests_seconds_count[1m])", "refId": "A" }
-      ]
+      "title": "SIGNAL 1: LATENCY (Tiempo de Respuesta)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }
     },
     {
+      "title": "Percentiles Críticos (P99 & P95)",
       "type": "timeseries",
-      "title": "Latencia Promedio de Respuestas",
-      "gridPos": { "h": 6, "w": 9, "x": 15, "y": 0 },
-      "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 11,
       "targets": [
-        { "expr": "rate(http_server_requests_seconds_sum[1m]) / rate(http_server_requests_seconds_count[1m])", "refId": "A" }
+        { "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P99 (Peor caso)", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))", "legendFormat": "P95", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "title": "Latencia Promedio vs Max",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 12,
+      "targets": [
+        { "expr": "rate(http_server_requests_seconds_sum[5m]) / rate(http_server_requests_seconds_count[5m])", "legendFormat": "Avg Latency", "refId": "A" }
       ],
       "fieldConfig": { "defaults": { "unit": "s" } }
     },
     {
-      "type": "timeseries",
-      "title": "Uso de CPU por Pod (Límite HPA)",
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
-      "id": 4,
-      "targets": [
-        { "expr": "sum(rate(container_cpu_usage_seconds_total{container='devops-service'}[5m])) by (pod)", "refId": "A" }
-      ]
+      "title": "SIGNAL 2: TRAFFIC (Demanda)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 }
     },
     {
+      "title": "Throughput (RPS)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 17 },
+      "id": 21,
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count[1m]))", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "title": "Peticiones por Endpoint",
       "type": "timeseries",
-      "title": "Tasa de Errores HTTP 5xx (Incident Detection)",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
-      "id": 5,
+      "gridPos": { "h": 6, "w": 16, "x": 8, "y": 17 },
+      "id": 22,
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (uri)", "legendFormat": "{{uri}}", "refId": "A" }]
+    },
+    {
+      "title": "SIGNAL 3: ERRORS (Calidad)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 }
+    },
+    {
+      "title": "Tasa de Error Actual (%)",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "id": 31,
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) * 100", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 5 }] } } }
+    },
+    {
+      "title": "Errores HTTP por Código",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 24 },
+      "id": 32,
+      "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{status=~\"[45]..\"}[5m])) by (status)", "legendFormat": "HTTP {{status}}", "refId": "A" }]
+    },
+    {
+      "title": "SIGNAL 4: SATURATION (Límites de la App)",
+      "type": "row",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 }
+    },
+    {
+      "title": "Spring Boot JVM Memory Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "id": 41,
       "targets": [
-        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]))", "refId": "A" }
+        { "expr": "jvm_memory_used_bytes{area=\"heap\"}", "legendFormat": "Used Heap", "refId": "A" },
+        { "expr": "jvm_memory_max_bytes{area=\"heap\"}", "legendFormat": "Max Heap", "refId": "B" }
       ],
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } }
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "title": "JVM Threads (¿Bloqueo de hilos?)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "id": 42,
+      "targets": [
+        { "expr": "jvm_threads_live_threads", "legendFormat": "Live Threads", "refId": "A" }
+      ]
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["production", "devops-challenge"],
-  "time": { "from": "now-15m", "to": "now" },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Production SRE Dashboard - Microservice",
-  "version": 1
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "SRE Master - Full Observability Dashboard",
+  "version": 5
 }
