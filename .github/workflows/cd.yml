@@ -1,16 +1,8 @@
 name: "Continuous Deployment to AWS Production"
 
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - 'README.md'
-      - 'docs/**'
-      - 'instalations/**'
-      - '.gitignore'
-      - 'LICENSE'
-
-  workflow_dispatch:
+  workflow_call: # Permite que el orquestador lo llame
+  workflow_dispatch: # Permite ejecuciones bajo demanda exigidas en el reto
 
 jobs:
   infrastructure-and-delivery:

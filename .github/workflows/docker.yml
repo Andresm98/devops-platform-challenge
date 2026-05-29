@@ -1,8 +1,7 @@
 name: "Docker Containerization & Vulnerability Scan"
 
 on:
-  push:
-    branches: [ "dev" ]
+  workflow_call: # Permite que el orquestador lo llame
   workflow_dispatch: # Permite ejecuciones bajo demanda exigidas en el reto
 
 jobs:
