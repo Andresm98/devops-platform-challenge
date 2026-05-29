@@ -21,17 +21,24 @@ on:
   workflow_dispatch: # Permite ejecuciones bajo demanda exigidas en el reto
 
 jobs:
-  # Ejecuta CI siempre
-  Job-CI:
+  # 1. CI: Se ejecuta siempre (main y dev)
+  Pipeline-CI:
+    name: "Stage 1 — Continuous Integration"
     uses: ./.github/workflows/ci.yml
+    secrets: inherit # CRITICO: Esto inyecta credenciales de SonarCloud (pasa todos los secrets)
 
-  # Ejecuta Docker solo si CI termina bien
-  Job-Docker:
-    needs: Job-CI
+  # 2. Docker: Se ejecuta solo si CI pasa. (main y dev)
+  Pipeline-Docker:
+    name: "Stage 2 — Docker Build & Security Scan"
+    needs: Pipeline-CI
     uses: ./.github/workflows/docker.yml
+    secrets: inherit # Inyecta DOCKERHUB_USERNAME y TOKEN
 
-  # Ejecuta CD solo si es la rama MAIN, hubo PUSH (o merge) y Docker terminó bien
-  Job-CD:
-    needs: Job-Docker
+  # 3. CD: Solo en MAIN, solo en PUSH (merge) y si Docker pasó.
+  Pipeline-CD:
+    name: "Stage 3 — Continuous Deployment to AWS"
+    needs: Pipeline-Docker
+    # Condición: Solo rama main Y que sea un push (no PR) o disparo manual
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/cd.yml
+    secrets: inherit # Inyecta AWS_ACCESS_KEY, SSH_PRIVATE_KEY, etc.
