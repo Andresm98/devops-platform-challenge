@@ -31,11 +31,10 @@
           }
         },
         "url": {
-          "raw": "{{url_host}}:80/DevOps/auth/token",
+          "raw": "{{url_host}}/DevOps/auth/token",
           "host": [
             "{{url_host}}"
           ],
-          "port": "80",
           "path": [
             "DevOps",
             "auth",
@@ -60,7 +59,7 @@
           },
           {
             "key": "X-JWT-KWY",
-            "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6ImU0Y2MwOWM4LWI4OGMtNDU0Ni04NTJjLTM2MWJlY2M1NWI4MiIsImlhdCI6MTc3OTkwODkxMiwiZXhwIjoxNzc5OTA5NTEyfQ.9huS2aNCiYpr1TEIr4imeKK6EEPsyaVitgxO7akqF2DYWPp9Gqe2tSACFLXZ9l29",
+            "value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6IjJkNDE4MzZjLWNiMDQtNGY3YS1hYzM1LWE4YTY2NzhhN2FmNyIsImlhdCI6MTc4MDEwMzIyMywiZXhwIjoxNzgwMTAzODIzfQ.SjdVJMjmyaUMZQkPxfCpBzIzs17_bce6pL042uLbsdU6dbV8dt-8xnzU5F_mZcBh_kb8G8ImKA0KpjZEmR8gCg",
             "type": "text"
           },
           {
@@ -79,11 +78,10 @@
           }
         },
         "url": {
-          "raw": "{{url_host}}:80/DevOps",
+          "raw": "{{url_host}}/DevOps",
           "host": [
             "{{url_host}}"
           ],
-          "port": "80",
           "path": [
             "DevOps"
           ]
@@ -109,7 +107,7 @@
           },
           {
             "key": "X-JWT-KWY",
-            "value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6ImU0Y2MwOWM4LWI4OGMtNDU0Ni04NTJjLTM2MWJlY2M1NWI4MiIsImlhdCI6MTc3OTkwODkxMiwiZXhwIjoxNzc5OTA5NTEyfQ.9huS2aNCiYpr1TEIr4imeKK6EEPsyaVitgxO7akqF2DYWPp9Gqe2tSACFLXZ9l29",
+            "value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJOVFQtRGF0YS1UZXN0LUNsaWVudCIsImp0aSI6IjA2MTA4NTg0LTExYTYtNGI2OS04MTRmLThiZWU5ZjBmMDUwNCIsImlhdCI6MTc4MDAxMzI3OCwiZXhwIjoxNzgwMDEzODc4fQ.T-mvmGb3aZTRko7Krfwn2jgVOymdm5dD18O8tmRkUgxc9fQI7h246158bjyUbT6aFlMJh1ixKZ1DiwpZMN6ZpA",
             "type": "text"
           },
           {
@@ -128,11 +126,10 @@
           }
         },
         "url": {
-          "raw": "{{url_host}}:80/DevOps",
+          "raw": "{{url_host}}/DevOps",
           "host": [
             "{{url_host}}"
           ],
-          "port": "80",
           "path": [
             "DevOps"
           ]
